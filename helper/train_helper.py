@@ -1,8 +1,5 @@
-import matplotlib.pyplot as plt
-from PIL import Image
-from datetime import datetime
-import numpy as np
-import json
+from datetime import datetime, timezone
+from pathlib import Path
 import logging
 import os
 
@@ -12,6 +9,7 @@ from torch import optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms, models
+
 from torchvision.models import (
     EfficientNet_V2_S_Weights,
     VGG13_BN_Weights
@@ -97,6 +95,10 @@ class Trainer:
         valid_image_datasets = datasets.ImageFolder(valid_dir, valid_transforms)
         test_image_datasets = datasets.ImageFolder(test_dir, test_transforms)
 
+        # NOTE: Save the class to idx variable as it will be necessary
+        # when saving checkpoints and predicting class
+        self.model_idx_to_class = {value: key for key, value in train_image_datasets.class_to_idx.items()}
+
         # Using the image datasets and the trainforms, define the dataloaders
         batch_size = self.training_config['batch_size']
 
@@ -140,7 +142,7 @@ class Trainer:
         # Add the last output layer with 102 classification output nodes
         classifier.append(nn.Linear(in_features=in_features, out_features=102, bias=True))
         classifier.append(nn.LogSoftmax(dim=1))
-
+        
         model.classifier = classifier
 
         return model 
@@ -203,4 +205,38 @@ class Trainer:
         logging.info("Model training successful")
         return True
     
-    def test_accuracy()
+    def test_accuracy(self):
+        self.model.eval() # Disable the dropout layer
+        test_accuracy = 0
+        for images, labels in self.test_dataloader:
+            images, labels = images.to(self.device), labels.to(self.device)
+            ps = torch.exp(self.model(images))
+
+            top_p, top_class = ps.topk(1, dim=1)
+            equals = top_class == labels.view(*top_class.shape)
+            test_accuracy += equals.sum().item()
+
+        test_accuracy /= len(self.test_dataloader.dataset)
+
+        print(f"Model accuracy on test dataset: {test_accuracy * 100:.2f}%")
+
+    def save_checkpoint(self):
+        self.model.idx_to_class = self.model_idx_to_class
+
+        checkpoint = {
+            "training_cofig": self.training_config,
+            "idx_to_class": self.model.idx_to_class,
+            "pre_trained_model": Trainer.model_choices[self.training_config['arch']]['model_fn'],
+            "classifier": self.model.classifier,
+            "model_state_dict": self.model.state_dict(),
+            "optim_state_dict": self.optimizer.state_dict()
+        }
+
+        timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
+        save_path = Path(self.training_config["save_dir"]) / f"checkpoint_{timestamp}.pth"
+
+        # Ensure directory exists
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Save the checkpoint
+        torch.save(checkpoint, save_path)
