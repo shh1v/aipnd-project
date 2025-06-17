@@ -3,6 +3,7 @@ from PIL import Image
 from datetime import datetime
 import numpy as np
 import json
+import logging
 import os
 
 import torch
@@ -39,7 +40,17 @@ class Trainer:
 
         # Define the model architecture and add additional hidden layers
         self.model = self.build_model()
-        print(self.model)
+
+        # Define model training specifications
+        self.criterion = nn.NLLLoss()
+        self.optimizer = optim.Adam(self.model.parameters(),
+                                    lr=self.training_config['learning_rate'],
+                                    weight_decay=self.training_config["L2_lambda"])
+
+        # Move the model to appropiate device
+        self.device = self.training_config['device']
+        self.model.to(self.device)
+        logging.info("Model build successful")
 
 
     def prepare_dataloader(self):
@@ -133,4 +144,63 @@ class Trainer:
         model.classifier = classifier
 
         return model 
+
+    def train_model(self):
+        # Train the model
+        train_losses, valid_losses = [], []
+
+        for epoch in range(1, self.training_config['epochs'] + 1):
+            self.model.train() # Enable dropout layer
+            epoch_train_loss = 0
+            
+            for images, labels in self.train_dataloader:
+                # Move the inputs and labels to GPU if available
+                images, labels = images.to(self.device), labels.to(self.device)
+                
+                # Reset the gradiant values
+                self.optimizer.zero_grad()
+
+                # execute feed-forward
+                log_ps = self.model(images)
+                loss = self.criterion(log_ps, labels)
+                epoch_train_loss += loss.item()
+                
+                # back-propogation step
+                loss.backward()
+                self.optimizer.step()
+                
+            self.model.eval() # Disable the dropout layer
+            epoch_valid_loss = 0
+            epoch_valid_correct = 0
+            
+            # Turn of gradient computation for effeciency
+            with torch.no_grad():
+                for images, labels in self.valid_dataloader:
+                    images, labels = images.to(self.device), labels.to(self.device)
+                    log_ps = self.model(images)
+                    loss = self.criterion(log_ps, labels)
+                    epoch_valid_loss += loss.item()
+
+                    ps = torch.exp(log_ps)
+                    top_p, top_class = ps.topk(1, dim=1)
+                    equals = top_class == labels.view(*top_class.shape)
+                    epoch_valid_correct += equals.sum().item()
+
+                # Get average epoch train and validation losses
+                avg_epoch_train_loss = epoch_train_loss / len(self.train_dataloader.dataset)
+                avg_epoch_valid_loss = epoch_valid_loss / len(self.valid_dataloader.dataset)
+
+                # Append the train and validation losses
+                train_losses.append(avg_epoch_train_loss)
+                valid_losses.append(avg_epoch_valid_loss)
+
+                # Print metrics for each epoch
+                print(f"Epoch: {epoch}/{self.training_config['epochs']}.. ",
+                    f"Train Loss: {avg_epoch_train_loss:.3f}.. ",
+                    f"Valid Loss: {avg_epoch_valid_loss:.3f}.. ",
+                    f"Valid Acc: {epoch_valid_correct*100 / len(self.valid_dataloader.dataset):.1f}%")
         
+        logging.info("Model training successful")
+        return True
+    
+    def test_accuracy()

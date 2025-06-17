@@ -1,7 +1,15 @@
+import json
+import logging
 import torch
 import argparse
 
 from helper.train_helper import Trainer
+
+logging.basicConfig(
+    level=logging.INFO,  # or DEBUG for more verbosity
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
 def main(args):
 
     training_config = {
@@ -17,7 +25,17 @@ def main(args):
         "L2_lambda": 1e-4
     }
 
+    # Print model configuration for info
+    training_config_serializable = training_config.copy()
+    training_config_serializable["device"] = str(training_config_serializable["device"])
+    logging.info("Training Configuration:\n%s", json.dumps(training_config_serializable, indent=2))
+
+    # Define Trainer object that defines the model upon initialization
     trainer = Trainer(training_config)
+
+    # Train the model
+    logging.info("Model training in progress")
+    trainer.train_model()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
