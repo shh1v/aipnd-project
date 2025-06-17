@@ -1,0 +1,41 @@
+import torch
+import argparse
+
+from helper.train_helper import Trainer
+
+def main(args):
+
+    training_config = {
+        "train_dir": args.data_directory,
+        "save_dir":args.save_dir,
+        "arch": args.arch,
+        "device": torch.device("cuda:0" if torch.cuda.is_available() and args.gpu else "cpu"),
+        "batch_size": args.batch_size,
+        "epochs": args.epochs,
+        "learning_rate": args.learning_rate,
+        "hidden_units": args.hidden_units,
+        "dropout_prob": args.dropout_prob,
+        "L2_lambda": 1e-4
+    }
+
+    trainer = Trainer(training_config)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    # Model checkpoints and other specficiations
+    parser.add_argument('data_directory', help='Path to data directory for training, validation, and testing (ImageFolder compatible)')
+    parser.add_argument('--save_dir', default='checkpoints/', help='Path to directory for saving checkpoints')
+    parser.add_argument('--arch', default='efficientnetv2', choices=['efficientnetv2', 'vgg13'])
+    parser.add_argument('--gpu', action='store_true', help='Enable using GPU if available (default is CPU)')
+
+    # Model hyperparameters
+    parser.add_argument('--batch_size', default=32, type=int, help='Set the batch size for model training')
+    parser.add_argument('--epochs', default=30, type=int, help='Set the epochs for model training')
+    parser.add_argument('--learning_rate', default=1e-3, type=float, help='Set the learning rate for model training')
+    parser.add_argument('--hidden_units', nargs='*', default=[640, 320], type=int, help='Set the hidden layer units for model training')
+    parser.add_argument('--dropout_prob', default=0.3, type=float, help='Set the epochs for model training')
+
+    # Parse the arguments and run main()
+    args = parser.parse_args()
+    main(args)
