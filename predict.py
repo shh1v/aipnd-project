@@ -3,7 +3,7 @@ import logging
 import torch
 import argparse
 
-from helper.train_helper import Trainer
+from helper.predict_helper import Predictor
 
 logging.basicConfig(
     level=logging.INFO,  # or DEBUG for more verbosity
@@ -23,6 +23,9 @@ def main(args):
     predict_config_serializable = predict_config.copy()
     predict_config_serializable["device"] = str(predict_config_serializable["device"])
     logging.info("Model Prediction Configuration:\n%s", json.dumps(predict_config_serializable, indent=2))
+
+    # Create predictor object
+    predictor = Predictor(predict_config)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
