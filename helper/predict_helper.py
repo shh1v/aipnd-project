@@ -1,24 +1,10 @@
 import warnings
-
-
 import matplotlib.pyplot as plt
 from PIL import Image
-from datetime import datetime
 import numpy as np
 import json
 
 import torch
-from torch import nn
-from torch import optim
-import torch.nn.functional as F
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms, models
-
-
-
-import torch
-from torchvision import datasets, transforms, models
-
 from torchvision.models import (
     EfficientNet_V2_S_Weights,
     VGG13_BN_Weights
