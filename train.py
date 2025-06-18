@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # Model checkpoints and other specficiations
     parser.add_argument('data_directory', help='Path to data directory for training, validation, and testing (ImageFolder compatible)')
     parser.add_argument('--save_dir', default='script_checkpoints/', help='Path to directory for saving checkpoints')
-    parser.add_argument('--arch', default='efficientnetv2', choices=list(Trainer.model_choices.keys()))
+    parser.add_argument('--arch', default='efficientnetv2', choices=list(Trainer.model_choices.keys()), help="Set the pre-trained arch for the model")
     parser.add_argument('--gpu', action='store_true', help='Enable using GPU if available (default is CPU)')
 
     # Model hyperparameters

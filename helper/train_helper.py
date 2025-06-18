@@ -237,6 +237,8 @@ class Trainer:
 
         # Ensure directory exists
         save_path.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Save the checkpoint
         torch.save(checkpoint, save_path)
+        
+        print(f"Model checkpoint saved to {save_path}")
