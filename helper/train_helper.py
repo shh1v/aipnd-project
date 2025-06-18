@@ -31,13 +31,13 @@ class Trainer:
         self.training_config = training_config
 
         # Prepare training, validation, and testing datasets
-        dataloader = self.prepare_dataloader()
+        dataloader = self._prepare_dataloader()
         self.train_dataloader = dataloader['train_dataloader']
         self.valid_dataloader = dataloader['valid_dataloader']
         self.test_dataloader = dataloader['test_dataloader']
 
         # Define the model architecture and add additional hidden layers
-        self.model = self.build_model()
+        self.model = self._build_model()
 
         # Define model training specifications
         self.criterion = nn.NLLLoss()
@@ -51,7 +51,7 @@ class Trainer:
         logging.info("Model build successful")
 
 
-    def prepare_dataloader(self):
+    def _prepare_dataloader(self):
         # Ensure that train, valid, and test folders exists in the data directory
         train_dir = os.path.join(self.training_config['data_dir'], 'train')
         valid_dir = os.path.join(self.training_config['data_dir'], 'train')
@@ -110,7 +110,7 @@ class Trainer:
 
         return dataloader
 
-    def build_model(self):
+    def _build_model(self):
         arch = self.training_config['arch']
 
         if arch not in Trainer.model_choices:
@@ -240,5 +240,5 @@ class Trainer:
 
         # Save the checkpoint
         torch.save(checkpoint, save_path)
-        
+
         print(f"Model checkpoint saved to {save_path}")

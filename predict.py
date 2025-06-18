@@ -27,14 +27,17 @@ def main(args):
     # Create predictor object
     predictor = Predictor(predict_config)
 
+    # Predict the class of the provided image
+    predictor.predict_class(img_path=args.img_path)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model prediction specifications
     parser.add_argument('img_path', help='Path to image as model input')
     parser.add_argument('checkpoint', help='Path to checkpoint file for loading the trained model')
-    parser.add_argument('--top_k', default='3', help="Number of top predicted classses to show")
-    parser.add_argument('--category_names', default='cat_to_name.json', help="Provide mapping of categories to real names")
+    parser.add_argument('--top_k', type=int, default='3', help="Number of top predicted classses to show")
+    parser.add_argument('--category_names', default='cat_to_name.json', help="Path to mapping files of categories to real names")
     parser.add_argument('--gpu', action='store_true', help='Enable using GPU if available (default is CPU)')
 
     # Parse the arguments and run main()
